@@ -41,32 +41,40 @@
 
 (defun ivy-lsp--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
-  (let (;; contains current query, followed by the string representations
+  (let (;; contains current user input, followed by the string representations
         ;; of all currently available candidates
-        (candidates))
+        (candidates)
+        (current-request-id))
     (ivy-read
      prompt
-     (lambda (arg &rest args)
-       (if (string= arg (car candidates))
+     (lambda (user-input &rest args)
+       (if (string= user-input (car candidates))
            (--map (ivy-lsp--format-symbol-match it) (cdr candidates))
          (ignore
           (with-lsp-workspaces workspaces
-            (lsp-request-async
-             "workspace/symbol"
-             (list :query arg)
-             (lambda (ws-candidates)
-               (setq candidates (cons arg ws-candidates))
-               (let (ivy--old-text)
-                 (ivy--exhibit)))
-             :mode 'detached)))))
+            (-let (((request &as &plist :id request-id)
+                    (lsp-make-request
+                     "workspace/symbol"
+                     (list :query user-input))))
+              (when current-request-id
+                (lsp--cancel-request current-request-id))
+              (setq current-request-id request-id)
+              (lsp-send-request-async
+               request
+               (lambda (incoming-candidates)
+                 (setq candidates (cons user-input incoming-candidates))
+                 (let (ivy--old-text)
+                   (ivy--exhibit)))
+               :mode 'detached))))))
      :dynamic-collection t
+     :require-match t
      :initial-input initial-input
      :action (lambda (result)
                (let ((match
                       (--find
                        (string-equal result (ivy-lsp--format-symbol-match it))
-                       ;; KLUDGE: remove current query, find candidate corresponding
-                       ;; to selected candidate by linear search
+                       ;; KLUDGE: remove current query, find candidate
+                       ;; corresponding to selected candidate by linear search
                        (-drop 1 candidates))))
                  (when match (ivy-lsp--workspace-symbol-action match)))))))
 
