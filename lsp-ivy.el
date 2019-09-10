@@ -1,6 +1,6 @@
 ;;; lsp-ivy.el --- LSP ivy integration             -*- lexical-binding: t; -*-
 
-;; Copyright (C) 2019  Ivan Yonchovski, Sebastian Sturm
+;; Copyright (C) 2019  Sebastian Sturm
 
 ;; This program is free software; you can redistribute it and/or modify
 ;; it under the terms of the GNU General Public License as published by
