@@ -26,12 +26,12 @@
 (require 'dash)
 (require 'lsp-mode)
 
-(defun ivy-lsp--format-symbol-match (match)
+(defun lsp-ivy--format-symbol-match (match)
   (format "%s.%s"
           (gethash "containerName" match)
           (gethash "name" match)))
 
-(defun ivy-lsp--workspace-symbol-action (candidate)
+(defun lsp-ivy--workspace-symbol-action (candidate)
   (-let* (((&hash "uri" "range" (&hash "start" (&hash "line" "character")))
            (gethash "location" candidate)))
     (find-file (lsp--uri-to-path uri))
@@ -39,7 +39,7 @@
     (forward-line line)
     (forward-char character)))
 
-(defun ivy-lsp--workspace-symbol (workspaces prompt initial-input)
+(defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
   (let (;; contains current user input, followed by the string representations
         ;; of all currently available candidates
@@ -49,7 +49,7 @@
      prompt
      (lambda (user-input &rest args)
        (if (string= user-input (car candidates))
-           (--map (ivy-lsp--format-symbol-match it) (cdr candidates))
+           (--map (lsp-ivy--format-symbol-match it) (cdr candidates))
          (ignore
           (with-lsp-workspaces workspaces
             (-let (((request &as &plist :id request-id)
@@ -72,27 +72,27 @@
      :action (lambda (result)
                (let ((match
                       (--find
-                       (string-equal result (ivy-lsp--format-symbol-match it))
+                       (string-equal result (lsp-ivy--format-symbol-match it))
                        ;; KLUDGE: remove current query, find candidate
                        ;; corresponding to selected candidate by linear search
                        (-drop 1 candidates))))
-                 (when match (ivy-lsp--workspace-symbol-action match)))))))
+                 (when match (lsp-ivy--workspace-symbol-action match)))))))
 
 ;;;###autoload
-(defun ivy-lsp-workspace-symbol (arg)
+(defun lsp-ivy-workspace-symbol (arg)
   "`ivy' for lsp workspace/symbol.
 When called with prefix ARG the default selection will be symbol at point."
   (interactive "P")
-  (ivy-lsp--workspace-symbol (lsp-workspaces)
+  (lsp-ivy--workspace-symbol (lsp-workspaces)
                              "Workspace symbol: "
                              (when arg (thing-at-point 'symbol))))
 
 ;;;###autoload
-(defun ivy-lsp-global-workspace-symbol (arg)
+(defun lsp-ivy-global-workspace-symbol (arg)
   "`ivy' for lsp workspace/symbol for all of the current workspaces.
 When called with prefix ARG the default selection will be symbol at point."
   (interactive "P")
-  (ivy-lsp--workspace-symbol
+  (lsp-ivy--workspace-symbol
    (-uniq (-flatten (ht-values (lsp-session-folder->servers (lsp-session)))))
    "Global workspace symbols: "
    (when arg (thing-at-point 'symbol))))
