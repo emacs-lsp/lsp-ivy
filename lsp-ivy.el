@@ -27,9 +27,11 @@
 (require 'lsp-mode)
 
 (defun lsp-ivy--format-symbol-match (match)
-  (format "%s.%s"
-          (gethash "containerName" match)
-          (gethash "name" match)))
+  (let ((containerName (gethash "containerName" match))
+        (name (gethash "name" match)))
+    (if (string-empty-p containerName)
+        name
+      (format "%s.%s" containerName name))))
 
 (defun lsp-ivy--workspace-symbol-action (candidate)
   (-let* (((&hash "uri" "range" (&hash "start" (&hash "line" "character")))
