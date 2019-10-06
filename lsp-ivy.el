@@ -22,11 +22,18 @@
 ;; Version: 0.1
 ;;
 
+;;; Commentary:
+
+;;
+
+;;; Code:
+
 (require 'ivy)
 (require 'dash)
 (require 'lsp-mode)
 
 (defun lsp-ivy--format-symbol-match (match)
+  "Convert the (hash-valued) MATCH returned by `lsp-mode` into a candidate string."
   (let ((containerName (gethash "containerName" match))
         (name (gethash "name" match)))
     (if (string-empty-p containerName)
@@ -34,6 +41,7 @@
       (format "%s.%s" containerName name))))
 
 (defun lsp-ivy--workspace-symbol-action (candidate)
+  "Jump to selected CANDIDATE."
   (-let* (((&hash "uri" "range" (&hash "start" (&hash "line" "character")))
            (gethash "location" candidate)))
     (find-file (lsp--uri-to-path uri))
@@ -100,3 +108,4 @@ When called with prefix ARG the default selection will be symbol at point."
    (when arg (thing-at-point 'symbol))))
 
 (provide 'lsp-ivy)
+;;; lsp-ivy.el ends here
