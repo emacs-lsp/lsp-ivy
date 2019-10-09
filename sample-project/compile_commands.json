@@ -1,0 +1,10 @@
+[
+  {
+    "file": "some_file.cpp",
+    "command": "clang++ -std=c++17 -x c++ -g some_file.cpp -c -o /tmp/some_file.o"
+  },
+  {
+    "file": "some_other_file.cpp",
+    "command": "clang++ -std=c++17 -x c++ -g some_other_file.cpp -c -o /tmp/some_other_file.o"
+  }
+]
