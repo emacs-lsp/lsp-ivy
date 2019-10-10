@@ -34,11 +34,11 @@
 
 (defun lsp-ivy--format-symbol-match (match)
   "Convert the (hash-valued) MATCH returned by `lsp-mode` into a candidate string."
-  (let ((containerName (gethash "containerName" match))
+  (let ((container-name (gethash "containerName" match))
         (name (gethash "name" match)))
-    (if (string-empty-p containerName)
+    (if (or (null container-name) (string-empty-p container-name))
         name
-      (format "%s.%s" containerName name))))
+      (format "%s.%s" container-name name))))
 
 (defun lsp-ivy--workspace-symbol-action (candidate)
   "Jump to selected CANDIDATE."
@@ -59,20 +59,25 @@
      prompt
      (lambda (user-input &rest args)
        (if (string= user-input (car candidates))
-           (--map (lsp-ivy--format-symbol-match it) (cdr candidates))
+           (mapcar
+            (lambda (it) (lsp-ivy--format-symbol-match it))
+            (cdr candidates))
          (ignore
           (with-lsp-workspaces workspaces
-            (-let (((request &as &plist :id request-id)
-                    (lsp-make-request
-                     "workspace/symbol"
-                     (list :query user-input))))
+            (let ((request (lsp-make-request
+                            "workspace/symbol"
+                            (list :query user-input))))
               (when current-request-id
-                (lsp--cancel-request current-request-id))
-              (setq current-request-id request-id)
+                (lsp--cancel-request
+                 current-request-id))
+              (setq current-request-id
+                    (plist-get request :id))
               (lsp-send-request-async
                request
                (lambda (incoming-candidates)
-                 (setq candidates (cons user-input incoming-candidates))
+                 (setq candidates
+                       (cons user-input
+                             incoming-candidates))
                  (let (ivy--old-text)
                    (ivy--exhibit)))
                :mode 'detached))))))
@@ -85,7 +90,7 @@
                        (string-equal result (lsp-ivy--format-symbol-match it))
                        ;; KLUDGE: remove current query, find candidate
                        ;; corresponding to selected candidate by linear search
-                       (-drop 1 candidates))))
+                       (cdr candidates))))
                  (when match (lsp-ivy--workspace-symbol-action match)))))))
 
 ;;;###autoload
