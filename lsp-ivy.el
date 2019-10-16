@@ -18,7 +18,7 @@
 ;; Author: Sebastian Sturm
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/lsp-ivy
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (ivy "0.12.0"))
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (ivy "0.13.0"))
 ;; Version: 0.1
 ;;
 
