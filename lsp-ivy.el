@@ -51,8 +51,7 @@
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
-  (let ((candidates nil)
-        (current-request-id nil))
+  (let ((current-request-id nil))
     (ivy-read
      prompt
      (lambda (user-input)
@@ -67,23 +66,17 @@
                  (plist-get request :id))
            (lsp-send-request-async
             request
-            (lambda (incoming-candidates)
-              (ivy-update-candidates
-               (mapcar
-                #'lsp-ivy--format-symbol-match
-                (setq candidates incoming-candidates))))
+            #'ivy-update-candidates
             :mode 'detached)))
        0)
      :dynamic-collection t
      :require-match t
      :initial-input initial-input
-     :action (lambda (result)
-               (let ((match
-                      (cl-find-if
-                       (lambda (it) (string-equal result (lsp-ivy--format-symbol-match it)))
-                       candidates)))
-                 (when match
-                   (lsp-ivy--workspace-symbol-action match)))))))
+     :action #'lsp-ivy--workspace-symbol-action
+     :caller 'lsp-ivy-workspace-symbol)))
+
+(ivy-configure 'lsp-ivy-workspace-symbol
+  :display-transformer-fn #'lsp-ivy--format-symbol-match)
 
 ;;;###autoload
 (defun lsp-ivy-workspace-symbol (arg)
