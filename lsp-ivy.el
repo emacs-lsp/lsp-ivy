@@ -99,5 +99,24 @@ When called with prefix ARG the default selection will be symbol at point."
    "Global workspace symbols: "
    (when arg (thing-at-point 'symbol))))
 
+;;;###autoload
+(defun lsp-ivy-execute-code-action()
+  "`ivy' for lsp code actions."
+  (interactive)
+  (let ((actions (lsp-code-actions-at-point)))
+    (cond
+     ((seq-empty-p actions) (signal 'lsp-no-code-actions nil))
+     ((and (eq (seq-length actions) 1) lsp-auto-execute-action)
+      (lsp-execute-code-action (lsp-seq-first actions)))
+     (t
+      (ivy-read "Code actions: " (-map (lambda (x) (gethash "title" x)) actions)
+                :action (lambda (candidate)
+                          (lsp-execute-code-action (-first (lambda (x) (string= (gethash "title" x) candidate)) actions))
+                          )
+                )
+      )
+     ))
+  )
+
 (provide 'lsp-ivy)
 ;;; lsp-ivy.el ends here
