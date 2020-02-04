@@ -111,12 +111,7 @@ When called with prefix ARG the default selection will be symbol at point."
      (t
       (ivy-read "Code actions: " (-map (lambda (x) (gethash "title" x)) actions)
                 :action (lambda (candidate)
-                          (lsp-execute-code-action (-first (lambda (x) (string= (gethash "title" x) candidate)) actions))
-                          )
-                )
-      )
-     ))
-  )
+                          (lsp-execute-code-action (-first (lambda (x) (string= (gethash "title" x) candidate)) actions))))))))
 
 (provide 'lsp-ivy)
 ;;; lsp-ivy.el ends here
