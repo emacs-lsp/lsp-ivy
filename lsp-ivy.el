@@ -35,12 +35,13 @@
 (require 'ivy)
 (require 'dash)
 (require 'lsp-mode)
+
 (defgroup lsp-ivy nil
   "LSP support for ivy-based symbol completion"
   :group 'lsp-mode)
 
 (defcustom lsp-ivy-show-symbol-kind
-  nil
+  t
   "Whether to show the symbol's kind when showing lsp symbols"
   :group 'lsp-ivy
   :type 'boolean)
@@ -116,10 +117,12 @@
   (let* ((container-name (gethash "containerName" match))
          (name (gethash "name" match))
          (type (elt lsp-ivy-symbol-kind-to-string (gethash "kind" match) ))
-         (typestr (propertize (format "[%s]" (car type)) 'face `(:foreground ,(cdr type)))))
-    (if (or (null container-name) (string-empty-p container-name))
-        (format "%s %s" typestr name)
-      (format "%s %s.%s" typestr container-name name))))
+         (typestr (if lsp-ivy-show-symbol-kind
+                      (propertize (format "[%s] " (car type)) 'face `(:foreground ,(cdr type)))
+                    "")))
+    (concat typestr (if (or (null container-name) (string-empty-p container-name))
+                        (format "%s" name)
+                      (format "%s.%s" container-name name)))))
 
 (defun lsp-ivy--workspace-symbol-action (candidate)
   "Jump to selected CANDIDATE."
