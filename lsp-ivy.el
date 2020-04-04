@@ -19,8 +19,8 @@
 ;;          Oliver Rausch
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/lsp-ivy
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "5.0") (ivy "0.13.0"))
-;; Version: 0.2
+;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.2.1") (ivy "0.13.0"))
+;; Version: 0.3
 ;;
 
 ;;; Commentary:
@@ -137,29 +137,23 @@
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
-  (let ((current-request-id nil))
-    (ivy-read
-     prompt
-     (lambda (user-input)
-       (with-lsp-workspaces workspaces
-         (let ((request (lsp-make-request
-                         "workspace/symbol"
-                         (list :query user-input))))
-           (when current-request-id
-             (lsp--cancel-request
-              current-request-id))
-           (lsp-send-request-async
-            request
-            (lambda (result)
-              (ivy-update-candidates (-remove 'lsp-ivy--filter-func result)))
-            :mode 'detached)
-           (setq current-request-id (plist-get request :id))))
-       0)
-     :dynamic-collection t
-     :require-match t
-     :initial-input initial-input
-     :action #'lsp-ivy--workspace-symbol-action
-     :caller 'lsp-ivy-workspace-symbol)))
+  (ivy-read
+   prompt
+   (lambda (user-input)
+     (with-lsp-workspaces workspaces
+       (lsp-request-async
+        "workspace/symbol"
+        (list :query user-input)
+        (lambda (result)
+          (ivy-update-candidates (-remove 'lsp-ivy--filter-func result)))
+        :mode 'detached
+        :cancel-token :workspace-symbol))
+     0)
+   :dynamic-collection t
+   :require-match t
+   :initial-input initial-input
+   :action #'lsp-ivy--workspace-symbol-action
+   :caller 'lsp-ivy-workspace-symbol))
 
 (ivy-configure 'lsp-ivy-workspace-symbol
   :display-transformer-fn #'lsp-ivy--format-symbol-match)
