@@ -148,13 +148,12 @@
            (when current-request-id
              (lsp--cancel-request
               current-request-id))
-           (setq current-request-id
-                 (plist-get request :id))
            (lsp-send-request-async
             request
             (lambda (result)
               (ivy-update-candidates (-remove 'lsp-ivy--filter-func result)))
-            :mode 'detached)))
+            :mode 'detached)
+           (setq current-request-id (plist-get request :id))))
        0)
      :dynamic-collection t
      :require-match t
