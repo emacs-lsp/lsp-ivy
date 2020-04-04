@@ -51,73 +51,73 @@
   :group 'lsp-ivy
   :type '(repeat integer))
 
-(defcustom lsp-ivy-symbol-kind-to-string
-  [("    " . "red") ;; Unknown - 0
-   ("File" . "red") ;; File - 1
-   ("Modu" . "red") ;; Module - 2
-   ("Nmsp" . "red") ;; Namespace - 3
-   ("Pack" . "red") ;; Package - 4
-   ("Clss" . "red") ;; Class - 5
-   ("Meth" . "violet") ;; Method - 6
-   ("Prop" . "violet") ;; Property - 7
-   ("Fld " . "violet") ;; Field - 8
-   ("Cons" . "red") ;; Constructor - 9
-   ("Enum" . "red") ;; Enum - 10
-   ("Intf" . "red") ;; Interface - 11
-   ("Func" . "darkgreen") ;; Function - 12
-   ("Var " . "blue") ;; Variable - 13
-   ("Cnst" . "blue") ;; Constant - 14
-   ("Str " . "blue") ;; String - 15
-   ("Num " . "blue") ;; Number - 16
-   ("Bool " . "blue") ;; Boolean - 17
-   ("Arr " . "blue") ;; Array - 18
-   ("Obj " . "blue") ;; Object - 19
-   ("Key " . "blue") ;; Key - 20
-   ("Null" . "red") ;; Null - 21
-   ("EmMm" . "violet") ;; EnumMember - 22
-   ("Srct" . "red") ;; Struct - 23
-   ("Evnt" . "red") ;; Event - 24
-   ("Op  " . "red") ;; Operator - 25
-   ("TPar" . "red")] ;; TypeParameter - 26
-  "A vector of 26 cons cells, where the ith cons cell contains the string representation and foreground color to use for the i+1th SymbolKind (defined in the LSP)"
+(defcustom lsp-ivy-symbol-kind-to-face
+  [("    " . nil)                           ;; Unknown - 0
+   ("File" . 'font-lock-builtin-face)       ;; File - 1
+   ("Modu" . 'font-lock-keyword-face)       ;; Module - 2
+   ("Nmsp" . 'font-lock-keyword-face)       ;; Namespace - 3
+   ("Pack" . 'font-lock-keyword-face)       ;; Package - 4
+   ("Clss" . 'font-lock-type-face)          ;; Class - 5
+   ("Meth" . 'font-lock-function-name-face) ;; Method - 6
+   ("Prop" . 'font-lock-reference-face)     ;; Property - 7
+   ("Fld " . 'font-lock-reference-face)     ;; Field - 8
+   ("Cons" . 'font-lock-function-name-face) ;; Constructor - 9
+   ("Enum" . 'font-lock-type-face)          ;; Enum - 10
+   ("Intf" . 'font-lock-type-face)          ;; Interface - 11
+   ("Func" . 'font-lock-function-name-face) ;; Function - 12
+   ("Var " . 'font-lock-variable-name-face) ;; Variable - 13
+   ("Cnst" . 'font-lock-constant-face)      ;; Constant - 14
+   ("Str " . 'font-lock-string-face)        ;; String - 15
+   ("Num " . 'font-lock-builtin-face)       ;; Number - 16
+   ("Bool " . 'font-lock-builtin-face)      ;; Boolean - 17
+   ("Arr " . 'font-lock-builtin-face)       ;; Array - 18
+   ("Obj " . 'font-lock-builtin-face)       ;; Object - 19
+   ("Key " . 'font-lock-reference-face)     ;; Key - 20
+   ("Null" . 'font-lock-builtin-face)       ;; Null - 21
+   ("EmMm" . 'font-lock-constant-face)      ;; EnumMember - 22
+   ("Srct" . 'font-lock-type-face)          ;; Struct - 23
+   ("Evnt" . 'font-lock-builtin-face)       ;; Event - 24
+   ("Op  " . 'font-lock-function-name-face) ;; Operator - 25
+   ("TPar" . 'font-lock-type-face)]         ;; TypeParameter - 26
+  "A vector of 26 cons cells, where the ith cons cell contains the string representation and face to use for the i+1th SymbolKind (defined in the LSP)"
   :group 'lsp-ivy
   :type '(vector
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)
-          (cons string color)))
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)
+          (cons string face)))
 
 
 (defun lsp-ivy--format-symbol-match (match)
   "Convert the (hash-valued) MATCH returned by `lsp-mode` into a candidate string."
   (let* ((container-name (gethash "containerName" match))
          (name (gethash "name" match))
-         (type (elt lsp-ivy-symbol-kind-to-string (gethash "kind" match) ))
+         (type (elt lsp-ivy-symbol-kind-to-face (gethash "kind" match) ))
          (typestr (if lsp-ivy-show-symbol-kind
-                      (propertize (format "[%s] " (car type)) 'face `(:foreground ,(cdr type)))
+                      (propertize (format "[%s] " (car type)) 'face (cdr type))
                     "")))
     (concat typestr (if (or (null container-name) (string-empty-p container-name))
                         (format "%s" name)
