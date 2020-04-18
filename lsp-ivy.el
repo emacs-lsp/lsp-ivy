@@ -112,8 +112,10 @@
 
 
 (defun lsp-ivy--format-symbol-match (match)
-  "Convert the (hash-valued) MATCH returned by `lsp-mode` into a candidate string."
-  (let* ((container-name (gethash "containerName" match))
+  "Convert the MATCH returned by `lsp-mode` into a candidate string.
+MATCH is a cons cell whose cdr is the hash-table from `lsp-mode`."
+  (let* ((match (cdr match))
+         (container-name (gethash "containerName" match))
          (name (gethash "name" match))
          (type (elt lsp-ivy-symbol-kind-to-face (gethash "kind" match) ))
          (typestr (if lsp-ivy-show-symbol-kind
@@ -124,8 +126,9 @@
                       (format "%s.%s" container-name name)))))
 
 (defun lsp-ivy--workspace-symbol-action (candidate)
-  "Jump to selected CANDIDATE."
-  (-let* (((&hash "uri" "range" (&hash "start" (&hash "line" "character")))
+  "Jump to selected CANDIDATE, a cons cell whose cdr is a hash table."
+  (-let* ((candidate (cdr candidate))
+          ((&hash "uri" "range" (&hash "start" (&hash "line" "character")))
            (gethash "location" candidate)))
     (find-file (lsp--uri-to-path uri))
     (goto-char (point-min))
@@ -145,7 +148,11 @@
         "workspace/symbol"
         (list :query user-input)
         (lambda (result)
-          (ivy-update-candidates (-remove 'lsp-ivy--filter-func result)))
+          (ivy-update-candidates
+           (mapcar
+            (lambda (data)
+              (cons (gethash "name" data) data))
+            (-remove 'lsp-ivy--filter-func result))))
         :mode 'detached
         :cancel-token :workspace-symbol))
      0)
