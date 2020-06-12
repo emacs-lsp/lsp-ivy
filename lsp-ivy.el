@@ -41,13 +41,13 @@
 
 (defcustom lsp-ivy-show-symbol-kind
   t
-  "Whether to show the symbol's kind when showing lsp symbols"
+  "Whether to show the symbol's kind when showing lsp symbols."
   :group 'lsp-ivy
   :type 'boolean)
 
 (defcustom lsp-ivy-filter-symbol-kind
   nil
-  "A list of LSP SymbolKind's to filter out"
+  "A list of LSP SymbolKind's to filter out."
   :group 'lsp-ivy
   :type '(repeat integer))
 
@@ -79,7 +79,7 @@
    ("Evnt" . font-lock-builtin-face)       ;; Event - 24
    ("Op  " . font-lock-function-name-face) ;; Operator - 25
    ("TPar" . font-lock-type-face)]         ;; TypeParameter - 26
-  "A vector of 26 cons cells, where the ith cons cell contains the string representation and face to use for the i+1th SymbolKind (defined in the LSP)"
+  "A vector of 26 cons cells, where the ith cons cell contains the string representation and face to use for the i+1th SymbolKind (defined in the LSP)."
   :group 'lsp-ivy
   :type '(vector
           (cons string face)
@@ -136,6 +136,7 @@ MATCH is a cons cell whose cdr is the hash-table from `lsp-mode`."
     (forward-char character)))
 
 (defun lsp-ivy--filter-func (candidate)
+  "Filter CANDIDATE kind from symbol kinds."
   (member (gethash "kind" candidate) lsp-ivy-filter-symbol-kind))
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
