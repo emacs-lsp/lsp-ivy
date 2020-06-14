@@ -115,7 +115,7 @@
 
 (defun lsp-ivy--format-symbol-match (symbol-information-match)
   "Convert the match returned by `lsp-mode` into a candidate string.
-SYMBOL-INFORMATION-MATCH is a cons cell whose cdr is the hash-table from `lsp-mode`."
+SYMBOL-INFORMATION-MATCH is a cons cell whose cdr is the SymbolInformation interface from `lsp-mode`."
   (-let* (((&SymbolInformation :name :kind :container-name?) (cdr symbol-information-match))
           (type (elt lsp-ivy-symbol-kind-to-face kind))
           (typestr (if lsp-ivy-show-symbol-kind
@@ -126,7 +126,7 @@ SYMBOL-INFORMATION-MATCH is a cons cell whose cdr is the hash-table from `lsp-mo
                       (format "%s.%s" container-name? name)))))
 
 (defun lsp-ivy--workspace-symbol-action (symbol-information-candidate)
-  "Jump to selected SYMBOL-INFORMATION-CANDIDATE, a cons cell whose cdr is a hash table."
+  "Jump to selected SYMBOL-INFORMATION-CANDIDATE, a cons cell whose cdr is a a SymbolInformation."
   (-let (((&SymbolInformation :location
                               (&Location :uri
                                          :range
