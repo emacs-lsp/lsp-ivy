@@ -47,6 +47,12 @@
   :group 'lsp-ivy
   :type 'boolean)
 
+(defcustom lsp-ivy-show-symbol-filename
+  t
+  "Whether to show the project-relative path to a symbol's point of definition."
+  :group 'lsp-ivy
+  :type 'boolean)
+
 (defcustom lsp-ivy-filter-symbol-kind
   nil
   "A list of LSP SymbolKind's to filter out."
@@ -127,24 +133,28 @@
   (forward-line line)
   (forward-char character))
 
-(defun lsp-ivy--format-symbol-match (symbol-information)
-  "Convert the match returned by `lsp-mode` into a candidate string.
-SYMBOL-INFORMATION is a SymbolInformation object from `lsp-mode`."
-  (-let* (((&SymbolInformation :name :kind :container-name?) symbol-information)
-          (type (elt lsp-ivy-symbol-kind-to-face kind))
-          (typestr (if lsp-ivy-show-symbol-kind
-                       (propertize (format "[%s] " (car type)) 'face (cdr type))
-                     "")))
+(lsp-defun lsp-ivy--format-symbol-match
+  ((&SymbolInformation :name :kind :container-name? :location (&Location :uri))
+   project-root)
+  "Convert the match returned by `lsp-mode` into a candidate string."
+  (let* ((type (elt lsp-ivy-symbol-kind-to-face kind))
+         (typestr (if lsp-ivy-show-symbol-kind
+                      (propertize (format "[%s] " (car type)) 'face (cdr type))
+                    ""))
+         (pathstr (if lsp-ivy-show-symbol-filename
+                      (propertize (format " · %s" (file-relative-name (lsp--uri-to-path uri) project-root))
+                                  'face font-lock-comment-face) "")))
     (concat typestr (if (or (null container-name?) (string-empty-p container-name?))
                         (format "%s" name)
-                      (format "%s.%s" container-name? name)))))
+                      (format "%s.%s" container-name? name)) pathstr)))
 
 (lsp-defun lsp-ivy--transform-candidate ((symbol-information &as &SymbolInformation :kind)
-                                         filter-regexps?)
+                                         filter-regexps? workspace-root)
   "Map candidate to nil if it should be excluded based on `lsp-ivy-filter-symbol-kind' or
 FILTER-REGEXPS?, otherwise convert it to an `lsp-ivy:FormattedSymbolInformation' object."
   (unless (member kind lsp-ivy-filter-symbol-kind)
-    (let ((textual-representation (lsp-ivy--format-symbol-match symbol-information)))
+    (let ((textual-representation
+           (lsp-ivy--format-symbol-match symbol-information workspace-root)))
       (when (--all? (string-match-p it textual-representation) filter-regexps?)
         (lsp-put symbol-information :textualRepresentation textual-representation)
         symbol-information))))
@@ -154,10 +164,11 @@ FILTER-REGEXPS?, otherwise convert it to an `lsp-ivy:FormattedSymbolInformation'
   (let* ((prev-query nil)
          (unfiltered-candidates '())
          (filtered-candidates nil)
+         (workspace-root (lsp-workspace-root))
          (update-candidates
           (lambda (all-candidates filter-regexps?)
             (setq filtered-candidates
-                  (--keep (lsp-ivy--transform-candidate it filter-regexps?)
+                  (--keep (lsp-ivy--transform-candidate it filter-regexps? workspace-root)
                           all-candidates))
             (ivy-update-candidates filtered-candidates))))
     (ivy-read
