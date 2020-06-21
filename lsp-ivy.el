@@ -47,6 +47,12 @@
   :group 'lsp-ivy
   :type 'boolean)
 
+(defcustom lsp-ivy-show-symbol-filename
+  t
+  "Whether to show the project-relative path to a symbol's point of definition."
+  :group 'lsp-ivy
+  :type 'boolean)
+
 (defcustom lsp-ivy-filter-symbol-kind
   nil
   "A list of LSP SymbolKind's to filter out."
@@ -112,62 +118,89 @@
           (cons string face)
           (cons string face)))
 
+(eval-when-compile
+  (lsp-interface
+   (lsp-ivy:FormattedSymbolInformation
+    (:kind :name :location :textualRepresentation)
+    (:containerName :deprecated))))
 
-(defun lsp-ivy--format-symbol-match (symbol-information-match)
-  "Convert the match returned by `lsp-mode` into a candidate string.
-SYMBOL-INFORMATION-MATCH is a cons cell whose cdr is the SymbolInformation interface from `lsp-mode`."
-  (-let* (((&SymbolInformation :name :kind :container-name?) (cdr symbol-information-match))
-          (type (elt lsp-ivy-symbol-kind-to-face kind))
-          (typestr (if lsp-ivy-show-symbol-kind
-                       (propertize (format "[%s] " (car type)) 'face (cdr type))
-                     "")))
+(lsp-defun lsp-ivy--workspace-symbol-action
+  ((&SymbolInformation
+    :location (&Location :uri :range (&Range :start (&Position :line :character)))))
+  "Jump to selected candidate."
+  (find-file (lsp--uri-to-path uri))
+  (goto-char (point-min))
+  (forward-line line)
+  (forward-char character))
+
+(lsp-defun lsp-ivy--format-symbol-match
+  ((&SymbolInformation :name :kind :container-name? :location (&Location :uri))
+   project-root)
+  "Convert the match returned by `lsp-mode` into a candidate string."
+  (let* ((type (elt lsp-ivy-symbol-kind-to-face kind))
+         (typestr (if lsp-ivy-show-symbol-kind
+                      (propertize (format "[%s] " (car type)) 'face (cdr type))
+                    ""))
+         (pathstr (if lsp-ivy-show-symbol-filename
+                      (propertize (format " · %s" (file-relative-name (lsp--uri-to-path uri) project-root))
+                                  'face font-lock-comment-face) "")))
     (concat typestr (if (or (null container-name?) (string-empty-p container-name?))
                         (format "%s" name)
-                      (format "%s.%s" container-name? name)))))
+                      (format "%s.%s" container-name? name)) pathstr)))
 
-(defun lsp-ivy--workspace-symbol-action (symbol-information-candidate)
-  "Jump to selected SYMBOL-INFORMATION-CANDIDATE, a cons cell whose cdr is a a SymbolInformation."
-  (-let (((&SymbolInformation :location
-                              (&Location :uri
-                                         :range
-                                         (&Range :start
-                                                 (&Position :line :character))))
-          (cdr symbol-information-candidate)))
-    (find-file (lsp--uri-to-path uri))
-    (goto-char (point-min))
-    (forward-line line)
-    (forward-char character)))
-
-(lsp-defun lsp-ivy--filter-func ((&SymbolInformation :kind))
-  "Filter candidate kind from symbol kinds."
-  (member kind lsp-ivy-filter-symbol-kind))
+(lsp-defun lsp-ivy--transform-candidate ((symbol-information &as &SymbolInformation :kind)
+                                         filter-regexps? workspace-root)
+  "Map candidate to nil if it should be excluded based on `lsp-ivy-filter-symbol-kind' or
+FILTER-REGEXPS?, otherwise convert it to an `lsp-ivy:FormattedSymbolInformation' object."
+  (unless (member kind lsp-ivy-filter-symbol-kind)
+    (let ((textual-representation
+           (lsp-ivy--format-symbol-match symbol-information workspace-root)))
+      (when (--all? (string-match-p it textual-representation) filter-regexps?)
+        (lsp-put symbol-information :textualRepresentation textual-representation)
+        symbol-information))))
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
-  (ivy-read
-   prompt
-   (lambda (user-input)
-     (with-lsp-workspaces workspaces
-       (lsp-request-async
-        "workspace/symbol"
-        (lsp-make-workspace-symbol-params :query user-input)
-        (lambda (result)
-          (ivy-update-candidates
-           (mapcar
-            (-lambda ((symbol-information &as &SymbolInformation :name))
-              (cons name symbol-information))
-            (-remove #'lsp-ivy--filter-func result))))
-        :mode 'detached
-        :cancel-token :workspace-symbol))
-     0)
-   :dynamic-collection t
-   :require-match t
-   :initial-input initial-input
-   :action #'lsp-ivy--workspace-symbol-action
-   :caller 'lsp-ivy-workspace-symbol))
+  (let* ((prev-query nil)
+         (unfiltered-candidates '())
+         (filtered-candidates nil)
+         (workspace-root (lsp-workspace-root))
+         (update-candidates
+          (lambda (all-candidates filter-regexps?)
+            (setq filtered-candidates
+                  (--keep (lsp-ivy--transform-candidate it filter-regexps? workspace-root)
+                          all-candidates))
+            (ivy-update-candidates filtered-candidates))))
+    (ivy-read
+     prompt
+     (lambda (user-input)
+       (let* ((parts (split-string user-input))
+              (query (or (car parts) ""))
+              (filter-regexps? (mapcar #'regexp-quote (cdr parts))))
+         (when query
+           (if (string-equal prev-query query)
+               (funcall update-candidates unfiltered-candidates filter-regexps?)
+             (with-lsp-workspaces workspaces
+               (lsp-request-async
+                "workspace/symbol"
+                (lsp-make-workspace-symbol-params :query query)
+                (lambda (result)
+                  (setq unfiltered-candidates result)
+                  (funcall update-candidates unfiltered-candidates filter-regexps?))
+                :mode 'detached
+                :cancel-token :workspace-symbol))))
+         (setq prev-query query))
+       (or filtered-candidates 0))
+     :dynamic-collection t
+     :require-match t
+     :initial-input initial-input
+     :action #'lsp-ivy--workspace-symbol-action
+     :caller 'lsp-ivy-workspace-symbol)))
 
 (ivy-configure 'lsp-ivy-workspace-symbol
-  :display-transformer-fn #'lsp-ivy--format-symbol-match)
+  :display-transformer-fn
+  (-lambda ((&lsp-ivy:FormattedSymbolInformation :textual-representation))
+    textual-representation))
 
 ;;;###autoload
 (defun lsp-ivy-workspace-symbol (arg)
