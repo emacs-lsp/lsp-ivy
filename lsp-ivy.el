@@ -137,7 +137,8 @@
   ((&SymbolInformation :name :kind :container-name? :location (&Location :uri))
    project-root)
   "Convert the match returned by `lsp-mode` into a candidate string."
-  (let* ((type (elt lsp-ivy-symbol-kind-to-face kind))
+  (let* ((sanitized-kind (if (< kind (length lsp-ivy-symbol-kind-to-face)) kind 0))
+         (type (elt lsp-ivy-symbol-kind-to-face sanitized-kind))
          (typestr (if lsp-ivy-show-symbol-kind
                       (propertize (format "[%s] " (car type)) 'face (cdr type))
                     ""))
