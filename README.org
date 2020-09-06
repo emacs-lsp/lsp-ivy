@@ -1,3 +1,6 @@
+[[https://melpa.org/#/lsp-ivy][file:https://melpa.org/packages/lsp-ivy-badge.svg]]
+[[https://stable.melpa.org/#/lsp-ivy][file:https://stable.melpa.org/packages/lsp-ivy-badge.svg]]
+
 #+TITLE: Ivy lsp integration
 
 This package provides an interactive ~ivy~ interface to the workspace symbol functionality offered by ~lsp-mode~. For an alternative implementation based on helm, see https://github.com/emacs-lsp/helm-lsp
