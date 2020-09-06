@@ -26,7 +26,7 @@
 ;;; Commentary:
 
 ;; This package provides an interactive ivy interface to the workspace symbol
-;; functionality offered by lsp-mode. For an alternative implementation based on
+;; functionality offered by lsp-mode.  For an alternative implementation based on
 ;; helm, see https://github.com/emacs-lsp/helm-lsp
 
 ;;; Code:
@@ -60,33 +60,33 @@
   :type '(repeat integer))
 
 (defcustom lsp-ivy-symbol-kind-to-face
-  [("    " . nil)                           ;; Unknown - 0
-   ("File" . font-lock-builtin-face)       ;; File - 1
-   ("Modu" . font-lock-keyword-face)       ;; Module - 2
-   ("Nmsp" . font-lock-keyword-face)       ;; Namespace - 3
-   ("Pack" . font-lock-keyword-face)       ;; Package - 4
-   ("Clss" . font-lock-type-face)          ;; Class - 5
-   ("Meth" . font-lock-function-name-face) ;; Method - 6
-   ("Prop" . font-lock-constant-face)      ;; Property - 7
-   ("Fld " . font-lock-constant-face)      ;; Field - 8
-   ("Cons" . font-lock-function-name-face) ;; Constructor - 9
-   ("Enum" . font-lock-type-face)          ;; Enum - 10
-   ("Intf" . font-lock-type-face)          ;; Interface - 11
-   ("Func" . font-lock-function-name-face) ;; Function - 12
-   ("Var " . font-lock-variable-name-face) ;; Variable - 13
-   ("Cnst" . font-lock-constant-face)      ;; Constant - 14
-   ("Str " . font-lock-string-face)        ;; String - 15
-   ("Num " . font-lock-builtin-face)       ;; Number - 16
-   ("Bool " . font-lock-builtin-face)      ;; Boolean - 17
-   ("Arr " . font-lock-builtin-face)       ;; Array - 18
-   ("Obj " . font-lock-builtin-face)       ;; Object - 19
-   ("Key " . font-lock-constant-face)      ;; Key - 20
-   ("Null" . font-lock-builtin-face)       ;; Null - 21
-   ("EmMm" . font-lock-constant-face)      ;; EnumMember - 22
-   ("Srct" . font-lock-type-face)          ;; Struct - 23
-   ("Evnt" . font-lock-builtin-face)       ;; Event - 24
-   ("Op  " . font-lock-function-name-face) ;; Operator - 25
-   ("TPar" . font-lock-type-face)]         ;; TypeParameter - 26
+  [("    " . nil)                           ; Unknown - 0
+   ("File" . font-lock-builtin-face)        ; File - 1
+   ("Modu" . font-lock-keyword-face)        ; Module - 2
+   ("Nmsp" . font-lock-keyword-face)        ; Namespace - 3
+   ("Pack" . font-lock-keyword-face)        ; Package - 4
+   ("Clss" . font-lock-type-face)           ; Class - 5
+   ("Meth" . font-lock-function-name-face)  ; Method - 6
+   ("Prop" . font-lock-constant-face)       ; Property - 7
+   ("Fld " . font-lock-constant-face)       ; Field - 8
+   ("Cons" . font-lock-function-name-face)  ; Constructor - 9
+   ("Enum" . font-lock-type-face)           ; Enum - 10
+   ("Intf" . font-lock-type-face)           ; Interface - 11
+   ("Func" . font-lock-function-name-face)  ; Function - 12
+   ("Var " . font-lock-variable-name-face)  ; Variable - 13
+   ("Cnst" . font-lock-constant-face)       ; Constant - 14
+   ("Str " . font-lock-string-face)         ; String - 15
+   ("Num " . font-lock-builtin-face)        ; Number - 16
+   ("Bool " . font-lock-builtin-face)       ; Boolean - 17
+   ("Arr " . font-lock-builtin-face)        ; Array - 18
+   ("Obj " . font-lock-builtin-face)        ; Object - 19
+   ("Key " . font-lock-constant-face)       ; Key - 20
+   ("Null" . font-lock-builtin-face)        ; Null - 21
+   ("EmMm" . font-lock-constant-face)       ; EnumMember - 22
+   ("Srct" . font-lock-type-face)           ; Struct - 23
+   ("Evnt" . font-lock-builtin-face)        ; Event - 24
+   ("Op  " . font-lock-function-name-face)  ; Operator - 25
+   ("TPar" . font-lock-type-face)]          ; TypeParameter - 26
   "A vector of 26 cons cells, where the ith cons cell contains the string representation and face to use for the i+1th SymbolKind (defined in the LSP)."
   :group 'lsp-ivy
   :type '(vector
