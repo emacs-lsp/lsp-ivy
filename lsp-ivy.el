@@ -118,13 +118,7 @@
           (cons string face)
           (cons string face)))
 
-(eval-when-compile
-  (lsp-interface
-   (lsp-ivy:FormattedSymbolInformation
-    (:kind :name :location :textualRepresentation)
-    (:containerName :deprecated))))
-
-(lsp-defun lsp-ivy--workspace-symbol-action
+(lsp-defun lsp-ivy--goto-symbol
   ((&SymbolInformation
     :location (&Location :uri :range (&Range :start (&Position :line :character)))))
   "Jump to selected candidate."
@@ -155,8 +149,11 @@ FILTER-REGEXPS?, otherwise convert it to an `lsp-ivy:FormattedSymbolInformation'
     (let ((textual-representation
            (lsp-ivy--format-symbol-match symbol-information workspace-root)))
       (when (--all? (string-match-p it textual-representation) filter-regexps?)
-        (lsp-put symbol-information :textualRepresentation textual-representation)
-        symbol-information))))
+        (cons textual-representation symbol-information)))))
+
+(lsp-defun lsp-ivy--workspace-symbol-action ((_ . sym))
+  "Jump to the `cdr' of INPUT0, an `&SymbolInformation'."
+  (lsp-ivy--goto-symbol sym))
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
@@ -195,11 +192,6 @@ FILTER-REGEXPS?, otherwise convert it to an `lsp-ivy:FormattedSymbolInformation'
      :initial-input initial-input
      :action #'lsp-ivy--workspace-symbol-action
      :caller 'lsp-ivy-workspace-symbol)))
-
-(ivy-configure 'lsp-ivy-workspace-symbol
-  :display-transformer-fn
-  (-lambda ((&lsp-ivy:FormattedSymbolInformation :textual-representation))
-    textual-representation))
 
 ;;;###autoload
 (defun lsp-ivy-workspace-symbol (arg)
