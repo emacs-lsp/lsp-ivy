@@ -134,7 +134,7 @@
   (forward-char character))
 
 (lsp-defun lsp-ivy--format-symbol-match
-  ((&SymbolInformation :name :kind :container-name? :location (&Location :uri))
+  ((sym &as &SymbolInformation :kind :location (&Location :uri))
    project-root)
   "Convert the match returned by `lsp-mode` into a candidate string."
   (let* ((sanitized-kind (if (< kind (length lsp-ivy-symbol-kind-to-face)) kind 0))
@@ -145,9 +145,7 @@
          (pathstr (if lsp-ivy-show-symbol-filename
                       (propertize (format " · %s" (file-relative-name (lsp--uri-to-path uri) project-root))
                                   'face font-lock-comment-face) "")))
-    (concat typestr (if (or (null container-name?) (string-empty-p container-name?))
-                        (format "%s" name)
-                      (format "%s.%s" container-name? name)) pathstr)))
+    (concat typestr (lsp-render-symbol-information sym ".") pathstr)))
 
 (lsp-defun lsp-ivy--transform-candidate ((symbol-information &as &SymbolInformation :kind)
                                          filter-regexps? workspace-root)
