@@ -220,5 +220,18 @@ When called with prefix ARG the default selection will be symbol at point."
    "Global workspace symbols: "
    (when arg (thing-at-point 'symbol))))
 
+
+
+;;;###autoload
+(defun lsp-ivy-workspace-folders-remove ()
+  "Remove a project-root from the list of workspace folders."
+  (interactive)
+  (let ((session (lsp-session)))
+    (ivy-read "Select workspace folder to remove: " (lsp-session-folders session)
+              :preselect (-some->> default-directory (lsp-find-session-folder session))
+              :action (lambda (folder)
+                        (lsp-workspace-folders-remove folder)
+                        (ivy--kill-current-candidate)))))
+
 (provide 'lsp-ivy)
 ;;; lsp-ivy.el ends here
