@@ -228,8 +228,8 @@ When called with prefix ARG the default selection will be symbol at point."
   (let ((session (lsp-session)))
     (ivy-read "Select workspace folder to remove: " (lsp-session-folders session)
               :preselect (-some->> default-directory (lsp-find-session-folder session))
-              :action (lambda (x)
-                        (lsp-workspace-folders-remove x)
+              :action (lambda (folder)
+                        (lsp-workspace-folders-remove folder)
                         (ivy--kill-current-candidate)))))
 
 (provide 'lsp-ivy)
