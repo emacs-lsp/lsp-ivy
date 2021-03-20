@@ -222,7 +222,7 @@ When called with prefix ARG the default selection will be symbol at point."
 
 
 ;;;###autoload
-(defun lsp-ivy-workspace-folder-remove ()
+(defun lsp-ivy-workspace-folders-remove ()
   "Remove a project-root from the list of workspace folders."
   (interactive)
   (let ((session (lsp-session)))
