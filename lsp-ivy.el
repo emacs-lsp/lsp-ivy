@@ -87,7 +87,11 @@
    ("Evnt" . font-lock-builtin-face)        ; Event - 24
    ("Op  " . font-lock-function-name-face)  ; Operator - 25
    ("TPar" . font-lock-type-face)]          ; TypeParameter - 26
-  "A vector of 26 cons cells, where the ith cons cell contains the string representation and face to use for the i+1th SymbolKind (defined in the LSP)."
+  "Mapping between eacho of LSP's SymbolKind and a face.
+
+A vector of 26 cons cells, where the ith cons cell contains
+the string representation and face to use for the i+1th
+SymbolKind (defined in the LSP)."
   :group 'lsp-ivy
   :type '(vector
           (cons string face)
