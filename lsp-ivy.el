@@ -162,37 +162,42 @@ textual representation with the original candidate as property."
 
 (defun lsp-ivy--workspace-symbol (workspaces prompt initial-input)
   "Search against WORKSPACES with PROMPT and INITIAL-INPUT."
-  (let* ((non-essential t)
-         (prev-query nil)
-         (unfiltered-candidates '())
-         (workspace-root (lsp-workspace-root)))
-    (ivy-read
-     prompt
-     (lambda (user-input)
-       (let* ((parts (split-string user-input))
-              (query (or (car parts) ""))
-              (filter-regexps? (mapcar #'regexp-quote (cdr parts))))
-         (unless (string-equal prev-query query)
-           (setq unfiltered-candidates
-                 (with-lsp-workspaces workspaces
-                   (lsp-request-while-no-input
-                    "workspace/symbol"
-                    (lsp-make-workspace-symbol-params :query query)))))
-         (setq prev-query query)
-         (--keep (lsp-ivy--transform-candidate it filter-regexps? workspace-root)
-                 unfiltered-candidates)))
-     :dynamic-collection t
-     :require-match t
-     :initial-input initial-input
-     :action #'lsp-ivy--workspace-symbol-action
-     :caller 'lsp-ivy-workspace-symbol)))
+  (if workspaces
+      (with-lsp-workspaces workspaces
+        (let* ((non-essential t)
+               (prev-query nil)
+               (unfiltered-candidates '())
+               (workspace-root (lsp-workspace-root)))
+          (ivy-read
+           prompt
+           (lambda (user-input)
+             (let* ((parts (split-string user-input))
+                    (query (or (car parts) ""))
+                    (filter-regexps? (mapcar #'regexp-quote (cdr parts))))
+               (unless (string-equal prev-query query)
+                 (setq unfiltered-candidates
+                       (with-lsp-workspaces workspaces
+                         (lsp-request-while-no-input
+                          "workspace/symbol"
+                          (lsp-make-workspace-symbol-params :query query)))))
+               (setq prev-query query)
+               (--keep (lsp-ivy--transform-candidate it filter-regexps? workspace-root)
+                       unfiltered-candidates)))
+           :dynamic-collection t
+           :require-match t
+           :initial-input initial-input
+           :action #'lsp-ivy--workspace-symbol-action
+           :caller 'lsp-ivy-workspace-symbol)))
+    (user-error "No LSP workspace active")))
 
 ;;;###autoload
 (defun lsp-ivy-workspace-symbol (arg)
   "`ivy' for lsp workspace/symbol.
 When called with prefix ARG the default selection will be symbol at point."
   (interactive "P")
-  (lsp-ivy--workspace-symbol (lsp-workspaces)
+  (lsp-ivy--workspace-symbol (or (lsp-workspaces)
+                                 (gethash (lsp-workspace-root default-directory)
+                                          (lsp-session-folder->servers (lsp-session))))
                              "Workspace symbol: "
                              (when arg (thing-at-point 'symbol))))
 
