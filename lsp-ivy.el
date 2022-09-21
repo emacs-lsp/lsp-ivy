@@ -19,7 +19,7 @@
 ;;          Oliver Rausch
 ;; Keywords: languages, debug
 ;; URL: https://github.com/emacs-lsp/lsp-ivy
-;; Package-Requires: ((emacs "25.1") (dash "2.14.1") (lsp-mode "6.2.1") (ivy "0.13.0"))
+;; Package-Requires: ((emacs "27.1") (dash "2.14.1") (lsp-mode "6.2.1") (ivy "0.13.0"))
 ;; Version: 0.5
 ;;
 
@@ -210,6 +210,59 @@ When called with prefix ARG the default selection will be symbol at point."
    (-uniq (-flatten (ht-values (lsp-session-folder->servers (lsp-session)))))
    "Global workspace symbols: "
    (when arg (thing-at-point 'symbol))))
+
+
+
+(lsp-defun lsp-ivy--format-document-symbol-match (dsym)
+  "Convert the DocumentSymbol match returned by `lsp-mode` into a list of this node
+and children nodes."
+  (-let* (((&DocumentSymbol :kind :name :selection-range :children? :detail?) dsym)
+          (sanitized-kind (if (< kind (length lsp-ivy-symbol-kind-to-face)) kind 0))
+          (type (elt lsp-ivy-symbol-kind-to-face sanitized-kind))
+          (typestr (if lsp-ivy-show-symbol-kind
+                       (propertize (format "[%s] " (car type)) 'face (cdr type))
+                     ""))
+          (symstr (format "%s%s%s" typestr
+                          name
+                          (if detail? (format " · %s" (propertize detail? 'face font-lock-comment-face)) "")))
+          (propertized-symstr (propertize symstr
+                                          'lsp-ivy-symbol-uri lsp-buffer-uri
+                                          'lsp-ivy-symbol-range selection-range))
+          (children-symstrs (seq-map #'lsp-ivy--format-document-symbol-match children?)))
+    (list propertized-symstr children-symstrs)))
+
+(defun lsp-ivy--document-symbol-action (sym-string)
+  "Jump to the symbol referenced in SYM-STRING."
+  (-let* ((range (get-text-property 0 'lsp-ivy-symbol-range sym-string))
+          ((&Range :start) range)
+          ((&Position :character :line) start)
+          (uri (get-text-property 0 'lsp-ivy-symbol-uri sym-string)))
+    (find-file (lsp--uri-to-path uri))
+    (goto-char (point-min))
+    (forward-line line)
+    (forward-char character)))
+
+(defun lsp-ivy-document-symbol ()
+  "`ivy' for lsp workspace/symbol.
+When called with prefix ARG the default selection will be symbol at point."
+  (interactive)
+  (let* ((xs (lsp-request-while-no-input "textDocument/documentSymbol"
+                                         (lsp--text-document-position-params)))
+         (xs-type (if (not xs)
+                      'DocumentSymbol
+                    (-let (((&DocumentSymbol :range) (car xs)))
+                      (if range
+                          'DocumentSymbol
+                        'SymbolInformation))))
+         (workspace-root (lsp-workspace-root))
+         (ts (if (eq xs-type 'DocumentSymbol)
+                 (flatten-tree (lsp-ivy--format-document-symbol-match (car xs)))
+               (seq-map #'(lambda (x) (lsp-ivy--format-symbol-match x workspace-root)) xs))))
+    (ivy-read "Document symbols: "
+              ts
+              :require-match t
+              :action #'lsp-ivy--document-symbol-action
+              :caller 'lsp-ivy-document-symbol)))
 
 
 
