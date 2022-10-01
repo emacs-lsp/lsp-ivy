@@ -243,8 +243,7 @@ and children nodes."
     (forward-char character)))
 
 (defun lsp-ivy-document-symbol ()
-  "`ivy' for lsp workspace/symbol.
-When called with prefix ARG the default selection will be symbol at point."
+  "`ivy' for lsp textDocument/documentSymbol."
   (interactive)
   (let* ((xs (lsp-request-while-no-input "textDocument/documentSymbol"
                                          (lsp--text-document-position-params)))
