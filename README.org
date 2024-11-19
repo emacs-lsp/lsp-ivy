@@ -1,5 +1,5 @@
 [[https://melpa.org/#/lsp-ivy][file:https://melpa.org/packages/lsp-ivy-badge.svg]]
-[[https://stable.melpa.org/#/lsp-ivy][file:https://stable.melpa.org/packages/lsp-ivy-badge.svg]]
+[[https://github.com/emacs-lsp/lsp-ivy/actions/workflows/test.yml][file:https://github.com/emacs-lsp/lsp-ivy/actions/workflows/test.yml/badge.svg]]
 
 #+TITLE: Ivy lsp integration
 
