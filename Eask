@@ -1,3 +1,5 @@
+;; -*- mode: eask; lexical-binding: t -*-
+
 (package "lsp-ivy"
          "0.5"
          "LSP ivy integration")
