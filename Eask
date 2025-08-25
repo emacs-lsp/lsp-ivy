@@ -14,7 +14,7 @@
 (source "gnu")
 (source "melpa")
 
-(depends-on "emacs" "27.1")
+(depends-on "emacs" "28.1")
 (depends-on "dash" "2.14.1")
 (depends-on "lsp-mode" "6.2.1")
 (depends-on "ivy" "0.13.0")
