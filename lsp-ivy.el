@@ -54,6 +54,12 @@
   :group 'lsp-ivy
   :type 'boolean)
 
+(defcustom lsp-ivy-show-containername
+  t
+  "Whether to show the containername to a symbol's point of definition."
+  :group 'lsp-ivy
+  :type 'boolean)
+
 (defcustom lsp-ivy-filter-symbol-kind
   nil
   "A list of LSP SymbolKind's to filter out."
@@ -133,7 +139,7 @@ SymbolKind (defined in the LSP)."
   (forward-char character))
 
 (lsp-defun lsp-ivy--format-symbol-match
-  ((sym &as &SymbolInformation :kind :location (&Location :uri))
+  ((sym &as &SymbolInformation :kind :container-name? :location (&Location :uri))
    project-root)
   "Convert the match returned by `lsp-mode` into a candidate string."
   (let* ((sanitized-kind (if (< kind (length lsp-ivy-symbol-kind-to-face)) kind 0))
@@ -143,8 +149,15 @@ SymbolKind (defined in the LSP)."
                     ""))
          (pathstr (if lsp-ivy-show-symbol-filename
                       (propertize (format " · %s" (file-relative-name (lsp--uri-to-path uri) project-root))
-                                  'face font-lock-comment-face) "")))
-    (concat typestr (lsp-render-symbol-information sym ".") pathstr)))
+                                  'face font-lock-comment-face)
+		    ""))
+	 (containerstr (if (and lsp-ivy-show-containername
+				container-name?
+				(not (string-empty-p container-name?)))
+			   (propertize (format "  %s" container-name?)
+                                       'face font-lock-comment-face)
+			 "")))
+    (concat typestr (lsp-render-symbol-information sym nil) containerstr pathstr)))
 
 (lsp-defun lsp-ivy--transform-candidate ((symbol-information &as &SymbolInformation :kind)
                                          filter-regexps? workspace-root)
